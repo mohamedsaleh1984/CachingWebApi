@@ -22,17 +22,15 @@ public class DriverController : ControllerBase
 	[HttpGet("Drivers")]
 	public async Task<IActionResult> Get()
 	{
-		var cachedData = _cacheService.GetData<List<Driver>>("DRIVERS");
+		var cachedData = _cacheService.GetData<IEnumerable<Driver>>("DRIVERS");
 		if (cachedData != null && cachedData.Count() > 0)
-		{
 			return Ok(cachedData);
-		}
 
 		cachedData = await _cachingDbContext.Drivers.ToListAsync();
 
 		//Set Expiry Time
-		var expiryTime = DateTimeOffset.UtcNow.AddSeconds(10);
-		_cacheService.SetData("DRIVERS", _cacheService, expiryTime);
+		var expiryTime = DateTimeOffset.UtcNow.AddSeconds(30);
+		_cacheService.SetData<IEnumerable<Driver>>("DRIVERS", cachedData, expiryTime);
 		return Ok(cachedData);
 	}
 
@@ -55,6 +53,7 @@ public class DriverController : ControllerBase
 			return BadRequest("Driver is not found");
 
 		_cachingDbContext.Drivers.Remove(exists);
+		await _cachingDbContext.SaveChangesAsync();
 		_cacheService.RemoveData($"DRIVER-{id}");
 		return NoContent();
 	}
@@ -74,7 +73,7 @@ public class DriverController : ControllerBase
 		//Set Expiry Time
 		var expiryTime = DateTimeOffset.UtcNow.AddSeconds(10);
 		//Add Cached Verison
-		_cacheService.SetData<Driver>($"DRIVER-{driver.Id}", driver, expiryTime);
+		_cacheService.SetData($"DRIVER-{driver.Id}", driver, expiryTime);
 		return NoContent();
 	}
 }

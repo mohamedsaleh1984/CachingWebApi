@@ -5,9 +5,11 @@ namespace CachingWebApi.Services;
 public class CacheService : ICacheService
 {
 	private IDatabase _cacheDb;
+	private const string REDIS_CNN = "localhost:6379";
+
 	public CacheService( )
 	{
-		var redis = ConnectionMultiplexer.Connect("localhost:6379");
+		var redis = ConnectionMultiplexer.Connect(REDIS_CNN);
 		_cacheDb = redis.GetDatabase();
 	}
 
@@ -35,6 +37,7 @@ public class CacheService : ICacheService
 		var isSet = _cacheDb.StringSet(key,JsonSerializer.Serialize(value),expiryTime);
 		return isSet;
 	}
+
 }
 
 
